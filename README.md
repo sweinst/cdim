@@ -53,7 +53,12 @@ History:
 ```powershell
 > cd %3
 ```
-For the previous visited directory, just run:
+For the previous visited directory (51), just run:
 ```powershell
 > cd -
 ```
+
+## Remarks
+Tab completion is provided:
+- if it starts with a '%', it will try to complete it with a full bookmark name
+- otherwuise, it will try to complete with a directory name
