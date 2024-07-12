@@ -4,7 +4,7 @@
 - bookmarks (persisted)
 - automatic directory navigation history (only for the current session)
 
-## bokmarks
+## Bookmarks
 - To add a bookmark: navigate to the directory and run:
 ```powershell
 > cd -b bookamrk_name
