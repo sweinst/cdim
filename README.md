@@ -57,7 +57,7 @@ For the previous visited directory, just run:
 ```powershell
 > cd -
 ```
-To navigate to a directory in the history looking for a substring or regular expression (fuzzy navigation):
+To navigate to a directory in the history looking for a substring or a regular expression (fuzzy navigation):
 ```powershell
 > cd my-First-dir
 > cd my-Second-dir
