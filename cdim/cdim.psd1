@@ -25,7 +25,7 @@ CompanyName = 'N/A'
 Copyright = '(c) Serge Weinstock. All rights reserved.'
 
 # Description of the functionality provided by this module
-# Description = ''
+Description = 'An improved version of cd with bookmarks and navigation history'
 
 # Minimum version of the PowerShell engine required by this module
 # PowerShellVersion = ''

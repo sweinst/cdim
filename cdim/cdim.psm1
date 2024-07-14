@@ -6,22 +6,16 @@ public class Bookmark {
     public System.DateTime TimeStamp;
 }
 "@;
-
 # the location of our settings
 $cdim_path = Join-Path (Split-Path $PROFILE -Parent) .cdim
-
 # the last version, we've read
 $cdim_last_update = Get-Date 1970-01-01
-
 # the stack of directories
 [Collections.Generic.List[String]] $cdim_history = @()
- 
 # the dictionary of bookmarks
 [System.Collections.Generic.SortedDictionary[String, Bookmark]]$cdim_bookmarks = @{}
-
 # maximum size of history
 $cdim_max_history = 15
- 
  <#
 .SYNOPSIS
    Improved cd command with history and bookmarks.
@@ -29,32 +23,23 @@ $cdim_max_history = 15
    Add to cd command:
    - history (only for the current session)
    - bookmarks (persisted)
-
 .PARAMETER Path
 If any of the other options have been provided, this the path to set the location to.
 If it starts with a '%', this is:
 - the ith item in the history, if a number follows the '%'
 - the name of a bookmark otherwise
-
 If the bookmark option has been set, this is the location to use for setting the bookmark
-
 if empty, the location will be set to the current directory
-
 .PARAMETER List
 This list the location history and available history
-
 .PARAMETER Bookmark
 This is the name of the bookmark to create or change
-
 .PARAMETER Delete
 This is the name of the bookmark to delete
-
 .PARAMETER Fuzzy
 Will cd to the most recent directory in history match the regex (case-insensitive)
-
 .NOTES
 It can be aliased to 'CD': Set-Alias cd cdim -Option AllScope
-
 .EXAMPLE
 cdim C:\windows
 CD to a directory
@@ -92,20 +77,19 @@ function cdim
     [switch]${List},
     [string]${Fuzzy}
     )
- 
     # get any "external" change
-    load-settings
+    get-settings
     # the path
     # add a new bookmark ?
     if (-not [System.String]::IsNullOrWhiteSpace($Bookmark))
     {
-        if ([System.String]::IsNullOrWhiteSpace($Path)) 
+        if ([System.String]::IsNullOrWhiteSpace($Path))
         {
             $Path = $PWD
         }
         $b = New-Object Bookmark -Property @{ Name=$Bookmark.Trim(); Path=$Path; TimeStamp = Get-Date }
         $cdim_bookmarks[$b.Name] = $b
-        Write-Host "Added bookmark '$($b.Name)' for path '$($b.Path)'"
+        Write-Output "Added bookmark '$($b.Name)' for path '$($b.Path)'"
         save-settings
     }
     elseif (-not [System.String]::IsNullOrWhiteSpace($Delete))
@@ -115,21 +99,21 @@ function cdim
     }
     elseif ($List)
     {
-        Write-Host "----------"
-        Write-Host "Bookmarks:"
-        Write-Host "----------"
+        Write-Output "----------"
+        Write-Output "Bookmarks:"
+        Write-Output "----------"
         # NB: foreach iterates with one null value if the collection is empty
-        if ($cdim_bookmarks.Count -ne 0) { $cdim_bookmarks.Values | ForEach-Object { Write-Host "$($_.Name): $($_.Path)" } }
-        Write-Host "----------"
-        Write-Host "History:"
-        Write-Host "----------"
+        if ($cdim_bookmarks.Count -ne 0) { $cdim_bookmarks.Values | ForEach-Object { Write-Output "$($_.Name): $($_.Path)" } }
+        Write-Output "----------"
+        Write-Output "History:"
+        Write-Output "----------"
         $i = 1
-        if ($cdim_history.Count -ne 0) { $cdim_history | ForEach-Object { Write-Host "${i}: $_"; $i += 1 } }
+        if ($cdim_history.Count -ne 0) { $cdim_history | ForEach-Object { Write-Output "${i}: $_"; $i += 1 } }
     }
     else
     {
         # fuzzy search
-        if (-not [System.String]::IsNullOrWhiteSpace($Fuzzy)) 
+        if (-not [System.String]::IsNullOrWhiteSpace($Fuzzy))
         {
             if ($cdim_history.Count -eq 0) { Throw "no directory in history" }
             foreach($h_path in $cdim_history)
@@ -145,14 +129,14 @@ function cdim
             if ([System.String]::IsNullOrWhiteSpace($Path)) { Throw "no match for '$Fuzzy'" }
         }
         # cd home
-        elseif ([System.String]::IsNullOrWhiteSpace($Path)) 
+        elseif ([System.String]::IsNullOrWhiteSpace($Path))
         {
             $Path = [Environment]::GetFolderPath("UserProfile")
         }
         # support for "cd -""
-        elseif ($Path.Trim().equals("-")) 
+        elseif ($Path.Trim().equals("-"))
         {
-            if ($cdim_history.Count -ge 2) 
+            if ($cdim_history.Count -ge 2)
             {
                 $Path = $cdim_history[1]
             }
@@ -165,7 +149,7 @@ function cdim
         {
             $Path = $Path.Substring(1)
             $i = $Path -as [int]
-            if ($i -eq $null)
+            if ($null -eq $i)
             {
                 if (-not $cdim_bookmarks.ContainsKey($Path))
                 {
@@ -193,19 +177,16 @@ function cdim
         # avoid too large history
         while ($cdim_max_history -lt $cdim_history.Count) { $cdim_history.RemoveAt($cdim_history.Count - 1) }
     }
-
 }
-
 function save-settings()
 {
     # first merge with any new definitions
-    load-settings
+    get-settings
     # then save them
     Export-Clixml -InputObject $cdim_bookmarks -Path $cdim_path
     $script:cdim_last_update = (Get-Item $cdim_path -Force).LastWriteTime
 }
-
-function load-settings()
+function get-settings()
 {
     # only load if newer
     if (Test-Path $cdim_path)
@@ -214,7 +195,7 @@ function load-settings()
         #NB: we must specify the scope for a DateTime as they are used by value
         if ($nts -gt $script:cdim_last_update)
         {
-            #Write-Host "reloading settings"
+            #Write-Output "reloading settings"
             $import = Import-Clixml -Path $cdim_path
             $script:cdim_last_update = $nts
             # merge
@@ -228,12 +209,11 @@ function load-settings()
         }
     }
 }
-
 function cdim_complete()
 {
     param($wordToComplete)
     # get any "external" change
-    load-settings
+    get-settings
     if ($wordToComplete.StartsWith('%'))
     {
         $key,$sep,$rest = $wordToComplete.SubString(1) -split "([/\\])",2
@@ -244,19 +224,18 @@ function cdim_complete()
         }
         else {
             # bookmark name completion
-            $cdim_bookmarks.Keys | ? { $_.StartsWith($key) } |
-                % { [System.Management.Automation.CompletionResult]::new('%' + $_, '%' + $_, 'ParameterValue', 'Bookmark') }
+            $cdim_bookmarks.Keys | where-object { $_.StartsWith($key) } |
+                ForEach-Object { [System.Management.Automation.CompletionResult]::new('%' + $_, '%' + $_, 'ParameterValue', 'Bookmark') }
         }
     }
-    else 
+    else
     {
         # directory name completion
         $key=$wordToComplete
-        Get-ChildItem -Directory -Path . | ? { $_.Name.StartsWith($key) } |
-            % { [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, 'ParameterValue', 'Directory') }
+        Get-ChildItem -Directory -Path . | where-object { $_.Name.StartsWith($key) } |
+            ForEach-Object { [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, 'ParameterValue', 'Directory') }
     }
 }
-
 Set-Alias cd cdim -Option AllScope -scope Global
 # PsReadline keeps a cache of the cd alias, we need to reset it
 # see https://jamesone111.wordpress.com/2019/11/24/redefining-cd-in-powershell/
@@ -266,8 +245,8 @@ if (Get-Module PSReadLine) {
     Import-Module -Force PSReadLine
 }
 
+
 Register-ArgumentCompleter -CommandName 'cdim' -ParameterName 'Path' -ScriptBlock {
-    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+ param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
     cdim_complete $wordToComplete
 }
-
