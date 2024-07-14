@@ -53,9 +53,19 @@ History:
 ```powershell
 > cd %3
 ```
-For the previous visited directory (51), just run:
+For the previous visited directory, just run:
 ```powershell
 > cd -
+```
+To navigate to a directory in the history looking for a substring or regular expression (fuzzy navigation):
+```powershell
+> cd my-First-dir
+> cd my-Second-dir
+> cd my-Thrid-dir
+# will cd to  my-first-dir
+> cd -f first
+# will cd to  my-second-dir
+> cd -f sec.*d
 ```
 
 ## Remarks
